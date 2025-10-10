@@ -41,8 +41,9 @@ class VS1053Component : public Component {
   bool soft_reset(void);
 
   void data_write_(const uint8_t* buffer, size_t length);
-  void command_write_(uint8_t addr, uint16_t data);
-  uint16_t command_read_(uint8_t addr);
+  uint16_t command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data);
+  void command_write_(uint8_t addr, uint16_t data) { this->command_transfer_(SCI_CMD_WRITE, addr, data); }
+  uint16_t command_read_(uint8_t addr) { return this->command_transfer_(SCI_CMD_READ, addr, 0); }
 };
 
 }  // namespace vs1053

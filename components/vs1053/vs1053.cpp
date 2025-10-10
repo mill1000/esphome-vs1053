@@ -180,32 +180,15 @@ void VS1053Component::data_write_(const uint8_t* buffer, size_t length) {
   this->sdi_spi_->disable();
 }
 
-void VS1053Component::command_write_(uint8_t addr, uint16_t data) {
+uint16_t VS1053Component::command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data) {
   // Assert XCS
   this->sci_spi_->enable();
 
   uint8_t buffer[4] = {
-      SCI_CMD_WRITE,
+      instruction,
       addr,
       static_cast<uint8_t>(data >> 8),
       static_cast<uint8_t>(data & 0xFF),
-  };
-  this->sci_spi_->write_array(buffer, sizeof(buffer));
-
-  // Deassert XCS
-  this->sci_spi_->disable();
-}
-
-// TODO could probably combine read/write to a single function
-uint16_t VS1053Component::command_read_(uint8_t addr) {
-  // Assert XCS
-  this->sci_spi_->enable();
-
-  uint8_t buffer[4] = {
-      SCI_CMD_READ,
-      addr,
-      0,
-      0,
   };
   this->sci_spi_->transfer_array(buffer, sizeof(buffer));
 

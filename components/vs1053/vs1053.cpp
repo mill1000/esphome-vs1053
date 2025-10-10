@@ -42,7 +42,19 @@ void VS1053Component::dump_config() {
   // ESP_LOGCONFIG(TAG, "  SCI SPI ", this->address_);
 }
 
-void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz = 1000, uint32_t sample_rate_hz = 44100) {
+void VS1053Component::set_volume(uint8_t left, uint8_t right) {
+  // Convert incoming volume to attenuation
+  uint8_t convert = [](uint8_t v) {
+    return 0xFF - v;
+  };
+
+  // Register sets attenuation in 0.5 dB steps
+  // Maximum volume 0x0000, minimum 0xFEFE, analog powerdown 0xFFFF
+  uint16_t vol = convert(left) << 8 | convert(right);
+  this->command_write_(SCI_REG_VOLUME, vol);
+}
+
+void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sample_rate_hz) {
   // Re-init device
   this->init_();
 
@@ -98,18 +110,6 @@ void VS1053Component::hard_reset_() {
 
 void VS1053Component::soft_reset_() {
   this->command_write_(SCI_REG_MODE, MODE_SM_SDINEW | MODE_SM_RESET);
-}
-
-void VS1053Component::set_volume_(uint8_t left, uint8_t right) {
-  // Convert incoming volume to attenuation
-  uint8_t convert = [](uint8_t v) {
-    return 0xFF - v;
-  };
-
-  // Register sets attenuation in 0.5 dB steps
-  // Maximum volume 0x0000, minimum 0xFEFE, analog powerdown 0xFFFF
-  uint16_t vol = convert(left) << 8 | convert(right);
-  this->command_write_(SCI_REG_VOLUME, vol);
 }
 
 void VS1053Component::command_write_(uint8_t addr, uint16_t data) {

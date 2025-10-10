@@ -50,7 +50,7 @@ void VS1053Component::dump_config() {
 
 void VS1053Component::set_volume(uint8_t left, uint8_t right) {
   // Convert incoming volume to attenuation
-  uint8_t convert = [](uint8_t v) {
+  auto convert = [](uint8_t v) {
     return 0xFF - v;
   };
 

@@ -1,5 +1,6 @@
 #include "vs1053.h"
 
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 #include "vs1053_reg.h"
 
@@ -19,7 +20,6 @@ void VS1053Component::setup() {
 
   // Reset and configure device
   if (!this->init_()) {
-    ESP_LOGE(TAG, "Initialization failed. DREQ not asserted.");
     this->mark_failed();
     return;
   }
@@ -28,6 +28,8 @@ void VS1053Component::setup() {
   // Check status register for device version
   uint16_t status = this->command_read_(SCI_REG_STATUS);
   uint8_t version = (status >> 4) & 0x0F;
+
+  ESP_LOGD(TAG, "Status 0x%04X, Version: %d", status, version);
 
   // Validate device version
   if (version != VS1053_VERSION) {
@@ -38,6 +40,7 @@ void VS1053Component::setup() {
 }
 
 void VS1053Component::loop() {
+  this->soft_reset_();
 }
 
 void VS1053Component::dump_config() {
@@ -49,6 +52,8 @@ void VS1053Component::dump_config() {
 }
 
 void VS1053Component::set_volume(uint8_t left, uint8_t right) {
+  ESP_LOGD(TAG, "Set volume L %d, R %d.", left, right);
+
   // Convert incoming volume to attenuation
   auto convert = [](uint8_t v) {
     return 0xFF - v;
@@ -120,6 +125,8 @@ void VS1053Component::play_test_sine_sdi(uint16_t ms) {
 }
 
 bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {
+  ESP_LOGD(TAG, "Waiting %d us for DREQ...", timeout_us);
+
   uint32_t start = micros();
 
   // Wait for DREQ to assert
@@ -132,6 +139,8 @@ bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {
 }
 
 bool VS1053Component::init_() {
+  ESP_LOGI(TAG, "Starting init.");
+
   // Hard reset device via pin
   this->reset_pin_->digital_write(false);
   delayMicroseconds(100);
@@ -139,8 +148,10 @@ bool VS1053Component::init_() {
 
   // delay(100);  // Adafruit blindly delayed
   // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
-  if (!(this->wait_data_ready_(4000)))
+  if (!(this->wait_data_ready_(4000))) {
+    ESP_LOGE(TAG, "Initialization failed. DREQ not asserted.");
     return false;
+  }
 
   // TODO Adafruit soft reset after HW reset
   // Datasheet does not indicate that is required
@@ -151,6 +162,7 @@ bool VS1053Component::init_() {
   // Configure clocks
   // CLKI = 3x XTALI, XTALI = 12.288 MHz
   // TOOD data sheet recommends 3.5x 0x9800
+  ESP_LOGD(TAG, "Configuring clocks.");
   this->command_write_(SCI_REG_CLOCKF, 0x6000);
 
   // Set minimum volume
@@ -161,6 +173,8 @@ bool VS1053Component::init_() {
 }
 
 bool VS1053Component::soft_reset_() {
+  ESP_LOGI(TAG, "Soft reset");
+
   // Assert soft reset
   this->command_write_(SCI_REG_MODE, MODE_SM_SDINEW | MODE_SM_RESET);
 
@@ -168,19 +182,25 @@ bool VS1053Component::soft_reset_() {
   delayMicroseconds(10);
 
   // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
-  if (!(this->wait_data_ready_(4000)))
+  if (!(this->wait_data_ready_(4000))) {
+    ESP_LOGE(TAG, "Soft reset failed. DREQ not asserted.");
     return false;
+  }
 
   return true;
 }
 
 void VS1053Component::data_write_(const uint8_t* buffer, size_t length) {
+  ESP_LOGV(TAG, "SDI write %d bytes: %s", length, format_hex_pretty(buffer, length).c_str());
+
   this->sdi_spi_->enable();
   this->sdi_spi_->write_array(buffer, length);
   this->sdi_spi_->disable();
 }
 
 uint16_t VS1053Component::command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data) {
+  ESP_LOGV(TAG, "SCI transfer %02X %02X %04X", instruction, addr, data);
+
   // Assert XCS
   this->sci_spi_->enable();
 
@@ -194,6 +214,8 @@ uint16_t VS1053Component::command_transfer_(uint8_t instruction, uint8_t addr, u
 
   // Deassert XCS
   this->sci_spi_->disable();
+
+  ESP_LOGV(TAG, "SCI transfer result %02X %02X", buffer[2], buffer[3]);
 
   return buffer[2] << 8 | buffer[3];
 }

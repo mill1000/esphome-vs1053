@@ -27,18 +27,18 @@ class VS1053Component : public Component {
   void set_sci_device(VS1053_SCI_SPIDevice* spi) { this->sci_spi_ = spi; }
   void set_sdi_device(VS1053_SDI_SPIDevice* spi) { this->sdi_spi_ = spi; }
 
-  void set_volume(uint9_t left, uint8_t right);
+  void set_volume(uint8_t left, uint8_t right);
   void play_test_sine(uint16_t ms, uint32_t freq_hz = 1000, uint32_t sample_rate_hz = 44100);
   void play_test_sine_sdi(uint16_t ms);
 
  protected:
   GPIOPin* reset_pin_;
   GPIOPin* dreq_pin_;
-  VS1053_SCI_SPIDevice sci_spi_;
-  VS1053_SDI_SPIDevice sdi_spi_;
+  VS1053_SCI_SPIDevice* sci_spi_;
+  VS1053_SDI_SPIDevice* sdi_spi_;
 
-  bool init_(void);
-  bool soft_reset(void);
+  bool init_();
+  bool soft_reset_();
 
   void data_write_(const uint8_t* buffer, size_t length);
   uint16_t command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data);

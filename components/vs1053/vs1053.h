@@ -18,8 +18,8 @@ static constexpr const uint8_t VS1053_VERSION = 4;  // Per datasheet, VS1053/VS8
 // VS1053 has two SPI interfaces, a command (SCI) and data (SDI) interface
 // XCS is the command select, XDCS is the data select
 // Both interfaces are Mode 0 MSB First
-class VS1053_SCI_SPIDevice : spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_200KHZ> {};
-class VS1053_SDI_SPIDevice : spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_8MHZ> {};
+class VS1053_SCI_SPIDevice : public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_200KHZ> {};
+class VS1053_SDI_SPIDevice : public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_8MHZ> {};
 
 class VS1053Component : public Component {
  public:

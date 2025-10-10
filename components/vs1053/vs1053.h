@@ -5,6 +5,9 @@
 #include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+
 namespace esphome {
 namespace vs1053 {
 

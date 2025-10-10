@@ -25,26 +25,26 @@ static constexpr const uint8_t SCI_REG_AICTRL1 = 0x0D;     // Application contro
 static constexpr const uint8_t SCI_REG_AICTRL2 = 0x0E;     // Application control register 2
 static constexpr const uint8_t SCI_REG_AICTRL3 = 0x0F;     // Application control register 3
 
-static constexpr const uint8_t GPIO_DDR = 0xC017;    // Direction
-static constexpr const uint8_t GPIO_IDATA = 0xC018;  // Values read from pins
-static constexpr const uint8_t GPIO_ODATA = 0xC019;  // Values set to the pins
+static constexpr const uint16_t GPIO_DDR = 0xC017;    // Direction
+static constexpr const uint16_t GPIO_IDATA = 0xC018;  // Values read from pins
+static constexpr const uint16_t GPIO_ODATA = 0xC019;  // Values set to the pins
 
-static constexpr const uint8_t INT_ENABLE = 0xC01A;  // Interrupt enable
+static constexpr const uint16_t INT_ENABLE = 0xC01A;  // Interrupt enable
 
-static constexpr const uint8_t MODE_SM_DIFF = 0x0001;      // Differential, 0: normal in-phase audio, 1: left channel inverted
-static constexpr const uint8_t MODE_SM_LAYER12 = 0x0002;   // Allow MPEG layers I & II
-static constexpr const uint8_t MODE_SM_RESET = 0x0004;     // Soft reset
-static constexpr const uint8_t MODE_SM_CANCEL = 0x0008;    // Cancel decoding current file
-static constexpr const uint8_t MODE_SM_EARSPKLO = 0x0010;  // EarSpeaker low setting
-static constexpr const uint8_t MODE_SM_TESTS = 0x0020;     // Allow SDI tests
-static constexpr const uint8_t MODE_SM_STREAM = 0x0040;    // Stream mode
-static constexpr const uint8_t MODE_SM_SDINEW = 0x0800;    // VS1002 native SPI modes
-static constexpr const uint8_t MODE_SM_ADPCM = 0x1000;     // PCM/ADPCM recording active
-static constexpr const uint8_t MODE_SM_LINE1 = 0x4000;     // MIC/LINE1 selector, 0: MICP, 1: LINE1
-static constexpr const uint8_t MODE_SM_CLKRANGE = 0x8000;  // Input clock range, 0: 12..13 MHz, 1: 24..26 MHz
+static constexpr const uint16_t MODE_SM_DIFF = 0x0001;      // Differential, 0: normal in-phase audio, 1: left channel inverted
+static constexpr const uint16_t MODE_SM_LAYER12 = 0x0002;   // Allow MPEG layers I & II
+static constexpr const uint16_t MODE_SM_RESET = 0x0004;     // Soft reset
+static constexpr const uint16_t MODE_SM_CANCEL = 0x0008;    // Cancel decoding current file
+static constexpr const uint16_t MODE_SM_EARSPKLO = 0x0010;  // EarSpeaker low setting
+static constexpr const uint16_t MODE_SM_TESTS = 0x0020;     // Allow SDI tests
+static constexpr const uint16_t MODE_SM_STREAM = 0x0040;    // Stream mode
+static constexpr const uint16_t MODE_SM_SDINEW = 0x0800;    // VS1002 native SPI modes
+static constexpr const uint16_t MODE_SM_ADPCM = 0x1000;     // PCM/ADPCM recording active
+static constexpr const uint16_t MODE_SM_LINE1 = 0x4000;     // MIC/LINE1 selector, 0: MICP, 1: LINE1
+static constexpr const uint16_t MODE_SM_CLKRANGE = 0x8000;  // Input clock range, 0: 12..13 MHz, 1: 24..26 MHz
 
-static constexpr const uint8_t EXTRA_PARAMETER_VERSION = 0x0003;
-static constexpr const uint8_t EXTRA_PARAMETER_ADDR = 0x1E02;
+static constexpr const uint16_t EXTRA_PARAMETER_VERSION = 0x0003;
+static constexpr const uint16_t EXTRA_PARAMETER_ADDR = 0x1E02;
 
 typedef struct extra_parameters_t {
   uint16_t version;         // 0x1E02 - Structure version

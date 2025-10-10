@@ -1,28 +1,69 @@
-from typing import Optional
-
 import esphome.codegen as cg
+from esphome import pins
 import esphome.config_validation as cv
 from esphome.components import spi
-from esphome.const import CONF_ID
+from esphome.const import CONF_ID, CONF_RESET_PIN
 
 CODEOWNERS = ["@mill1000"]
 DEPENDENCIES = ["spi"]
 
 MULTI_CONF = True
 CONF_VS1053_ID = "vs1053_id"
+CONF_XDCS_PIN = "xdcs_pin"
+CONF_XCS_PIN = "xcs_pin"
+CONF_SDI_DATA_RATE = "sdi_data_rate"
+CONF_SCI_DATA_RATE = "sci_data_rate"
+
+CONF_SDI_SPI = "sdi_spi"
+CONF_SCI_SPI = "sci_spi"
+
 
 vs1053_ns = cg.esphome_ns.namespace("vs1053")
-VS1053 = vs1053_ns.class_(
-    "VS1053", spi.SPIDevice, cg.Component)
+VS1053Component = vs1053_ns.class_("VS1053Component", cg.Component)
 
-CONFIG_SCHEMA = cv.Schema(
-    {
-        cv.GenerateID(): cv.declare_id(VS1053),
-    }
-).extend(spi.spi_device_schema(cs_pin_required=True))
+VS1053_SDI_SPI = vs1053_ns.class_("VS1053_SDI_SPIDevice", spi.SPIDevice)
+VS1053_SCI_SPI = vs1053_ns.class_("VS1053_SCI_SPIDevice", spi.SPIDevice)
+
+
+def _spi_schema(cls) -> cv.Schema:
+    return cv.Schema(
+        {
+            cv.GenerateID(): cv.declare_id(cls),
+        }
+    ).extend(spi.spi_device_schema(cs_pin_required=True))
+
+
+CONFIG_SCHEMA = (
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.declare_id(VS1053Component),
+            cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
+            cv.Required(CONF_SCI_SPI): _spi_schema(VS1053_SCI_SPI),
+            cv.Required(CONF_SDI_SPI): _spi_schema(VS1053_SDI_SPI),
+
+        }
+    ).extend(cv.COMPONENT_SCHEMA)
+)
+
+
+async def spi_to_code(config):
+    # Construct and register SPI devices
+    var = cg.new_Pvariable(config[CONF_ID])
+    await spi.register_spi_device(var, config)
+    return var
 
 
 async def to_code(config) -> None:
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-    await spi.register_spi_device(var, config)
+
+    # Set reset pin
+    reset_pin = await cg.gpio_pin_expression(config[CONF_RESET_PIN])
+    cg.add(var.set_reset_pin(reset_pin))
+
+    # Register each SPI device
+    sci_spi = await spi_to_code(config[CONF_SCI_SPI])
+    cg.add(var.set_sci_device(sci_spi))
+
+    sdi_spi = await spi_to_code(config[CONF_SDI_SPI])
+    cg.add(var.set_sdi_device(sdi_spi))

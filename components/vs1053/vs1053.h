@@ -2,19 +2,39 @@
 
 #include "esphome/components/spi/spi.h"
 #include "esphome/core/component.h"
+#include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
 
 namespace esphome {
 namespace vs1053 {
 
-class VS1053 : public Component,
-                public spi::SPIDevice<
-                    // TODO
-                    spi::BIT_ORDER_MSB_FIRST,
-                    spi::CLOCK_POLARITY_LOW,
-                    spi::CLOCK_PHASE_TRAILING,
-                    spi::DATA_RATE_1MHZ> {
-}
+// VS1053 has two SPI interfaces, a command (SCI) and data (SDI) interface
+// XCS is the command select, XDCS is the data select
+// Both interfaces are Mode 0 MSB First
+class VS1053_SCI_SPIDevice : spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_200KHZ> {};
+class VS1053_SDI_SPIDevice : spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_8MHZ> {};
+
+class VS1053Component : public Component {
+ public:
+  void setup() override;
+  void loop() override;
+  void dump_config() override;
+
+  void set_reset_pin(GPIOPin* pin) { this->reset_pin_ = pin; }
+  void set_sci_device(VS1053_SCI_SPIDevice* spi) { this->sci_spi_ = spi; }
+  void set_sdi_device(VS1053_SDI_SPIDevice* spi) { this->sdi_spi_ = spi; }
+
+ protected:
+  GPIOPin* reset_pin_;
+  VS1053_SCI_SPIDevice sci_spi_;
+  VS1053_SDI_SPIDevice sdi_spi_;
+
+  void hard_reset_(void);
+  void soft_reset(void);
+
+  void write_command_(uint8_t addr, uint16_t data);
+  uint16_t read_command_(uint8_t addr);
+};
 
 }  // namespace vs1053
 }  // namespace esphome

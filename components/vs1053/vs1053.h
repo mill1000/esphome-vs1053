@@ -8,6 +8,8 @@
 namespace esphome {
 namespace vs1053 {
 
+static constexpr const uint8_t VS1053_VERSION = 4;  // Per datasheet, VS1053/VS8053 SS_VER = 4
+
 // VS1053 has two SPI interfaces, a command (SCI) and data (SDI) interface
 // XCS is the command select, XDCS is the data select
 // Both interfaces are Mode 0 MSB First

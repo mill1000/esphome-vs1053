@@ -43,6 +43,5 @@ static constexpr const uint8_t MODE_SM_ADPCM = 0x1000;     // PCM/ADPCM recordin
 static constexpr const uint8_t MODE_SM_LINE1 = 0x4000;     // MIC/LINE1 selector, 0: MICP, 1: LINE1
 static constexpr const uint8_t MODE_SM_CLKRANGE = 0x8000;  // Input clock range, 0: 12..13 MHz, 1: 24..26 MHz
 
-
 }  // namespace vs1053
 }  // namespace esphome

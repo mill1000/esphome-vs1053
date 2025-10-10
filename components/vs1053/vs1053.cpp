@@ -1,4 +1,3 @@
-
 #include "vs1053.h"
 
 #include "esphome/core/log.h"
@@ -96,7 +95,7 @@ void VS1053Component::play_test_sine_sdi(uint16_t ms) {
   // Enable test modes
   uint16_t mode = this->command_read_(SCI_REG_MODE);
   mode |= MODE_SM_TESTS;
-  this->command_write_(SCI_REG_MODE);
+  this->command_write_(SCI_REG_MODE, mode);
 
   // Wait for data ready
   this->wait_data_ready_(1000);
@@ -139,7 +138,8 @@ bool VS1053Component::init_() {
   this->reset_pin_->digital_write(true);
 
   // delay(100);  // Adafruit blindly delayed
-  if !(this->wait_data_ready_(4000))  // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
+  // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
+  if (!(this->wait_data_ready_(4000)))
     return false;
 
   // TODO Adafruit soft reset after HW reset
@@ -168,7 +168,7 @@ bool VS1053Component::soft_reset_() {
   delayMicroseconds(10);
 
   // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
-  if !(this->wait_data_ready_(4000))
+  if (!(this->wait_data_ready_(4000)))
     return false;
 
   return true;
@@ -187,13 +187,13 @@ void VS1053Component::command_write_(uint8_t addr, uint16_t data) {
   uint8_t buffer[4] = {
       SCI_CMD_WRITE,
       addr,
-      data >> 8,
-      data & 0xFF,
+      static_cast<uint8_t>(data >> 8),
+      static_cast<uint8_t>(data & 0xFF),
   };
   this->sci_spi_->write_array(buffer, sizeof(buffer));
 
   // Deassert XCS
-  this->sci_spi->disable();
+  this->sci_spi_->disable();
 }
 
 // TODO could probably combine read/write to a single function
@@ -210,7 +210,7 @@ uint16_t VS1053Component::command_read_(uint8_t addr) {
   this->sci_spi_->transfer_array(buffer, sizeof(buffer));
 
   // Deassert XCS
-  this->sci_spi->disable();
+  this->sci_spi_->disable();
 
   return buffer[2] << 8 | buffer[3];
 }

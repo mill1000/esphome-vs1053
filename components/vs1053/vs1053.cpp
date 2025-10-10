@@ -111,7 +111,7 @@ void VS1053Component::play_test_sine_sdi(uint16_t ms) {
   delay(ms);
 
   // Stop test
-  uint8_t sine_stop[8] = {
+  uint8_t sine_stop[16] = {
       0x45, 0x78, 0x69, 0x74,
       0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00,

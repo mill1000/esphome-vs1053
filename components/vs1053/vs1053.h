@@ -1,12 +1,14 @@
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "esphome/components/spi/spi.h"
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "vs1053_reg.h"
 
 namespace esphome {
 namespace vs1053 {
@@ -42,6 +44,8 @@ class VS1053Component : public Component {
 
   bool init_();
   bool soft_reset_();
+
+  bool wait_data_ready_(uint32_t timeout_us);
 
   void data_write_(const uint8_t* buffer, size_t length);
   uint16_t command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data);

@@ -75,7 +75,7 @@ void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sam
   this->command_write_(SCI_REG_AUDATA, sample_rate_hz & 0xFFFE);
 
   // Configure sine frequency
-  uint16_t aictrl = std::min((freq_hz * 65536) / sample_rate_hz, 0x8000) & ~0x0007;
+  uint16_t aictrl = std::min((freq_hz * 65536) / sample_rate_hz, 0x8000ul) & ~0x0007;
   this->command_write_(SCI_REG_AICTRL0, aictrl);  // Left channel
   this->command_write_(SCI_REG_AICTRL1, aictrl);  // Right channel
 

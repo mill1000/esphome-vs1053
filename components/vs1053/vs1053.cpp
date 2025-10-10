@@ -7,7 +7,7 @@
 namespace esphome {
 namespace vs1053 {
 
-static const char *TAG = "VS1053";
+static const char* TAG = "VS1053";
 
 void VS1053Component::setup() {
   // Setup pins
@@ -62,13 +62,10 @@ void VS1053Component::set_volume(uint8_t left, uint8_t right) {
 }
 
 void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sample_rate_hz) {
-  // Re-init device
-  this->init_(); // TODO check failure? // TODO soft reset instead?
+  // Perform the "new" sine test via SCI
 
-  // // Enable test modes -> Old sine test
-  // uint16_t mode = this->command_read_(SCI_REG_MODE);
-  // mode |= MODE_SM_TESTS;
-  // this->command_write_(SCI_REG_MODE);
+  // Re-init device
+  this->init_();  // TODO check failure? // TODO soft reset instead?
 
   // New sine test
   // AICTRLn = Fsin X 65536 / Fs
@@ -84,10 +81,43 @@ void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sam
   this->command_write_(SCI_REG_AICTRL1, aictrl);  // Right channel
 
   this->command_write_(SCI_REG_AIADDR, 0x4020);  // Start test
-  delay(ms);                                     // TODO Units?
-  this->command_write_(SCI_REG_AIADDR, 0);       // TODO Stop test? Nothing is docs
+  delay(ms);
+  this->command_write_(SCI_REG_AIADDR, 0);  // TODO Stop test? Nothing is docs
 
   // this->soft_reset_(); // TODO?
+}
+
+void VS1053Component::play_test_sine_sdi(uint16_t ms) {
+  // Perform the "old" sine test via SDI
+
+  // Re-init device
+  this->init_();  // TODO check failure?
+
+  // Enable test modes
+  uint16_t mode = this->command_read_(SCI_REG_MODE);
+  mode |= MODE_SM_TESTS;
+  this->command_write_(SCI_REG_MODE);
+
+  // Wait for data ready
+  this->wait_data_ready_(1000);
+
+  // Start test with fixed frequency
+  const uint8_t sine_start[16] = {
+      0x53, 0xEF, 0x6E, 0x44,
+      0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00};
+  this->data_write_(sine_start, sizeof(sine_start));
+
+  delay(ms);
+
+  // Stop test
+  uint8_t sine_stop[8] = {
+      0x45, 0x78, 0x69, 0x74,
+      0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00};
+  this->data_write_(sine_stop, sizeof(sine_stop));
 }
 
 bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {
@@ -142,6 +172,12 @@ bool VS1053Component::soft_reset_() {
     return false;
 
   return true;
+}
+
+void VS1053Component::data_write_(const uint8_t* buffer, size_t length) {
+  this->sdi_spi_->enable();
+  this->sdi_spi_->write_array(buffer, length);
+  this->sdi_spi_->disable();
 }
 
 void VS1053Component::command_write_(uint8_t addr, uint16_t data) {

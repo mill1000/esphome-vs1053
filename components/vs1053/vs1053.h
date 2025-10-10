@@ -29,6 +29,7 @@ class VS1053Component : public Component {
 
   void set_volume(uint9_t left, uint8_t right);
   void play_test_sine(uint16_t ms, uint32_t freq_hz = 1000, uint32_t sample_rate_hz = 44100);
+  void play_test_sine_sdi(uint16_t ms);
 
  protected:
   GPIOPin* reset_pin_;
@@ -39,6 +40,7 @@ class VS1053Component : public Component {
   bool init_(void);
   bool soft_reset(void);
 
+  void data_write_(const uint8_t* buffer, size_t length);
   void command_write_(uint8_t addr, uint16_t data);
   uint16_t command_read_(uint8_t addr);
 };

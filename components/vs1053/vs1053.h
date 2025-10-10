@@ -23,6 +23,7 @@ class VS1053Component : public Component {
   void dump_config() override;
 
   void set_reset_pin(GPIOPin* pin) { this->reset_pin_ = pin; }
+  void set_dreq_pin(GPIOPin* pin) { this->dreq_pin_ = pin; }
   void set_sci_device(VS1053_SCI_SPIDevice* spi) { this->sci_spi_ = spi; }
   void set_sdi_device(VS1053_SDI_SPIDevice* spi) { this->sdi_spi_ = spi; }
 
@@ -31,6 +32,7 @@ class VS1053Component : public Component {
 
  protected:
   GPIOPin* reset_pin_;
+  GPIOPin* dreq_pin_;
   VS1053_SCI_SPIDevice sci_spi_;
   VS1053_SDI_SPIDevice sdi_spi_;
 

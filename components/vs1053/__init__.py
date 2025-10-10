@@ -9,13 +9,9 @@ DEPENDENCIES = ["spi"]
 
 MULTI_CONF = True
 CONF_VS1053_ID = "vs1053_id"
-CONF_XDCS_PIN = "xdcs_pin"
-CONF_XCS_PIN = "xcs_pin"
-CONF_SDI_DATA_RATE = "sdi_data_rate"
-CONF_SCI_DATA_RATE = "sci_data_rate"
-
 CONF_SDI_SPI = "sdi_spi"
 CONF_SCI_SPI = "sci_spi"
+CONF_DREQ_PIN = "dreq_pin"
 
 
 vs1053_ns = cg.esphome_ns.namespace("vs1053")
@@ -38,6 +34,7 @@ CONFIG_SCHEMA = (
         {
             cv.GenerateID(): cv.declare_id(VS1053Component),
             cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
+            cv.Required(CONF_DREQ_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_SCI_SPI): _spi_schema(VS1053_SCI_SPI),
             cv.Required(CONF_SDI_SPI): _spi_schema(VS1053_SDI_SPI),
 
@@ -60,6 +57,10 @@ async def to_code(config) -> None:
     # Set reset pin
     reset_pin = await cg.gpio_pin_expression(config[CONF_RESET_PIN])
     cg.add(var.set_reset_pin(reset_pin))
+
+    # Set data request pin
+    dreq_pin = await cg.gpio_pin_expression(config[CONF_DREQ_PIN])
+    cg.add(var.set_dreq_pin(dreq_pin))
 
     # Register each SPI device
     sci_spi = await spi_to_code(config[CONF_SCI_SPI])

@@ -38,6 +38,7 @@ void VS1053Component::loop() {
 void VS1053Component::dump_config() {
   ESP_LOGCONFIG(TAG, "VS1053:");
   LOG_PIN("  RESET Pin: ", this->reset_pin_);
+  LOG_PIN("  DREQ Pin: ", this->dreq_pin_);
   // TODO LOG SPI devices?
   // ESP_LOGCONFIG(TAG, "  SCI SPI ", this->address_);
 }

@@ -12,22 +12,28 @@ static const char *TAG = "VS1053";
 void VS1053Component::setup() {
   // Setup pins
   this->reset_pin_->setup();
+  this->dreq_pin_->setup();
 
   // Initialize SPI devices
   this->sci_spi_->spi_setup();
   this->sdi_spi_->spi_setup();
 
   // Reset and configure device
-  this->init_();
+  if (!this->init_()) {
+    ESP_LOGE(TAG, "Initialization failed. DREQ not asserted.");
+    this->mark_failed();
+    return;
+  }
 
-  // Read status register
+  // Init appears to be OK
+  // Check status register for device version
   uint16_t status = this->command_read_(SCI_REG_STATUS);
+  uint8_t version = (status >> 4) & 0x0F;
 
   // Validate device version
-  uint8_t version = (status >> 4) & 0x0F;
   if (version != VS1053_VERSION) {
     ESP_LOGE(TAG, "Initialization failed. SS_VER %d != %d", version, VS1053_VERSION);
-    this->mark_failed();  // Mark the component as failed
+    this->mark_failed();
     return;
   }
 }
@@ -57,7 +63,7 @@ void VS1053Component::set_volume(uint8_t left, uint8_t right) {
 
 void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sample_rate_hz) {
   // Re-init device
-  this->init_();
+  this->init_(); // TODO check failure? // TODO soft reset instead?
 
   // // Enable test modes -> Old sine test
   // uint16_t mode = this->command_read_(SCI_REG_MODE);
@@ -84,14 +90,33 @@ void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sam
   // this->soft_reset_(); // TODO?
 }
 
-void VS1053Component::init_() {
-  // Hard reset device via pin
-  this->hard_reset();
-  delay(100);  // TODO Delays in ms? This is quite long? // TODO datasheet says 1.8 ms @ 12.288 MHz
+bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {
+  uint32_t start = micros();
 
+  // Wait for DREQ to assert
+  while (!this->dreq_pin_->digital_read()) {
+    if ((micros() - start) > timeout_us)
+      return false;
+  }
+
+  return true;
+}
+
+bool VS1053Component::init_() {
+  // Hard reset device via pin
+  this->reset_pin_->digital_write(false);
+  delayMicroseconds(100);
+  this->reset_pin_->digital_write(true);
+
+  // delay(100);  // Adafruit blindly delayed
+  if !(this->wait_data_ready_(4000))  // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
+    return false;
+
+  // TODO Adafruit soft reset after HW reset
+  // Datasheet does not indicate that is required
   // Soft reset via registers
-  this->soft_reset_();
-  delay(100);
+  // this->soft_reset_();
+  // delay(100); // TODO Adafruit blind delay
 
   // Configure clocks
   // CLKI = 3x XTALI, XTALI = 12.288 MHz
@@ -100,17 +125,23 @@ void VS1053Component::init_() {
 
   // Set minimum volume
   // TODO or set analog power down?
-  this->set_volume_(1, 1);
+  this->set_volume(1, 1);
+
+  return true;
 }
 
-void VS1053Component::hard_reset_() {
-  this->reset_pin_->digital_write(false);
-  delay(100);
-  this->reset_pin_->digital_write(true);
-}
-
-void VS1053Component::soft_reset_() {
+bool VS1053Component::soft_reset_() {
+  // Assert soft reset
   this->command_write_(SCI_REG_MODE, MODE_SM_SDINEW | MODE_SM_RESET);
+
+  // Datasheet says to wait 2 us, then check DREQ
+  delayMicroseconds(10);
+
+  // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
+  if !(this->wait_data_ready_(4000))
+    return false;
+
+  return true;
 }
 
 void VS1053Component::command_write_(uint8_t addr, uint16_t data) {

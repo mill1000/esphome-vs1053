@@ -36,9 +36,8 @@ class VS1053Component : public Component {
   VS1053_SCI_SPIDevice sci_spi_;
   VS1053_SDI_SPIDevice sdi_spi_;
 
-  void init_(void);
-  void hard_reset_(void);
-  void soft_reset(void);
+  bool init_(void);
+  bool soft_reset(void);
 
   void command_write_(uint8_t addr, uint16_t data);
   uint16_t command_read_(uint8_t addr);

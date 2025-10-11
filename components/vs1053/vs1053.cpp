@@ -85,10 +85,12 @@ void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sam
   this->command_write_(SCI_REG_AICTRL1, aictrl);  // Right channel
 
   this->command_write_(SCI_REG_AIADDR, 0x4020);  // Start test
-  delay(ms);
-  this->command_write_(SCI_REG_AIADDR, 0);  // TODO Stop test? Nothing is docs
 
-  // this->soft_reset_(); // TODO?
+  // Stop test after duration
+  this->set_timeout(ms, [this]() {
+    // this->command_write_(SCI_REG_AIADDR, 0);  // TODO Stop tests? Nothing is docs
+    this->soft_reset_(); // TODO?
+  });
 }
 
 void VS1053Component::play_test_sine_sdi(uint16_t ms) {
@@ -113,15 +115,15 @@ void VS1053Component::play_test_sine_sdi(uint16_t ms) {
       0x00, 0x00, 0x00, 0x00};
   this->data_write_(sine_start, sizeof(sine_start));
 
-  delay(ms);
-
-  // Stop test
-  uint8_t sine_stop[16] = {
-      0x45, 0x78, 0x69, 0x74,
-      0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00};
-  this->data_write_(sine_stop, sizeof(sine_stop));
+  // Stop test after duration
+  this->set_timeout(ms, [this]() {
+    uint8_t sine_stop[16] = {
+        0x45, 0x78, 0x69, 0x74,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00};
+    this->data_write_(sine_stop, sizeof(sine_stop));
+  });
 }
 
 bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {

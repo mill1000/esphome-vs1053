@@ -33,7 +33,7 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(VS1053Component),
-            cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
+            cv.Optional(CONF_RESET_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_DREQ_PIN): pins.gpio_input_pin_schema,
             cv.Required(CONF_SCI_SPI): _spi_schema(VS1053_SCI_SPI),
             cv.Required(CONF_SDI_SPI): _spi_schema(VS1053_SDI_SPI),
@@ -54,9 +54,9 @@ async def to_code(config) -> None:
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
-    # Set reset pin
-    reset_pin = await cg.gpio_pin_expression(config[CONF_RESET_PIN])
-    cg.add(var.set_reset_pin(reset_pin))
+    # Set reset pin if present
+    if reset_pin := config.get(CONF_RESET_PIN):
+        cg.add(var.set_reset_pin(await cg.gpio_pin_expression(reset_pin)))
 
     # Set data request pin
     dreq_pin = await cg.gpio_pin_expression(config[CONF_DREQ_PIN])

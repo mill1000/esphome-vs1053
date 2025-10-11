@@ -11,7 +11,8 @@ static const char* TAG = "VS1053";
 
 void VS1053Component::setup() {
   // Setup pins
-  this->reset_pin_->setup();
+  if (this->reset_pin_)
+    this->reset_pin_->setup();
   this->dreq_pin_->setup();
 
   // Initialize SPI devices

@@ -34,7 +34,7 @@ CONFIG_SCHEMA = (
         {
             cv.GenerateID(): cv.declare_id(VS1053Component),
             cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
-            cv.Required(CONF_DREQ_PIN): pins.gpio_output_pin_schema,
+            cv.Required(CONF_DREQ_PIN): pins.gpio_input_pin_schema,
             cv.Required(CONF_SCI_SPI): _spi_schema(VS1053_SCI_SPI),
             cv.Required(CONF_SDI_SPI): _spi_schema(VS1053_SDI_SPI),
 

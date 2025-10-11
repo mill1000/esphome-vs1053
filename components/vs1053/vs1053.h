@@ -26,6 +26,7 @@ class VS1053Component : public Component {
   void setup() override;
   void loop() override;
   void dump_config() override;
+  // float get_setup_priority() const override { return setup_priority::DATA; }
 
   void set_reset_pin(GPIOPin* pin) { this->reset_pin_ = pin; }
   void set_dreq_pin(GPIOPin* pin) { this->dreq_pin_ = pin; }
@@ -42,8 +43,7 @@ class VS1053Component : public Component {
   VS1053_SCI_SPIDevice* sci_spi_;
   VS1053_SDI_SPIDevice* sdi_spi_;
 
-  bool init_();
-  bool soft_reset_();
+  bool init_(bool soft_reset = false);
 
   bool wait_data_ready_(uint32_t timeout_us);
 

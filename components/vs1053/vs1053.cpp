@@ -37,10 +37,13 @@ void VS1053Component::setup() {
     this->mark_failed();
     return;
   }
+
+  // this->set_interval(5000, [this]() {
+  //   this->play_test_sine(2000, 440);
+  // });
 }
 
 void VS1053Component::loop() {
-  this->soft_reset_();
 }
 
 void VS1053Component::dump_config() {
@@ -89,7 +92,7 @@ void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sam
   // Stop test after duration
   this->set_timeout(ms, [this]() {
     // this->command_write_(SCI_REG_AIADDR, 0);  // TODO Stop tests? Nothing is docs
-    this->soft_reset_(); // TODO?
+    this->init_(true);
   });
 }
 
@@ -140,26 +143,32 @@ bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {
   return true;
 }
 
-bool VS1053Component::init_() {
+bool VS1053Component::init_(bool soft_reset) {
   ESP_LOGI(TAG, "Starting init.");
 
-  // Hard reset device via pin
-  this->reset_pin_->digital_write(false);
-  delayMicroseconds(100);
-  this->reset_pin_->digital_write(true);
+  // Soft reset if requested or reset pin is not available
+  if (soft_reset || !this->reset_pin_) {
+    ESP_LOGI(TAG, "Soft reset");
 
-  // delay(100);  // Adafruit blindly delayed
+    // Assert soft reset
+    this->command_write_(SCI_REG_MODE, MODE_SM_SDINEW | MODE_SM_RESET);
+
+    // Datasheet says to wait 2 us, then check DREQ
+    delayMicroseconds(10);
+  } else {
+    // Hard reset device via pin
+    ESP_LOGI(TAG, "Hard reset");
+
+    this->reset_pin_->digital_write(false);
+    delayMicroseconds(100);
+    this->reset_pin_->digital_write(true);
+  }
+
   // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
   if (!(this->wait_data_ready_(4000))) {
     ESP_LOGE(TAG, "Initialization failed. DREQ not asserted.");
     return false;
   }
-
-  // TODO Adafruit soft reset after HW reset
-  // Datasheet does not indicate that is required
-  // Soft reset via registers
-  // this->soft_reset_();
-  // delay(100); // TODO Adafruit blind delay
 
   // Configure clocks
   // CLKI = 3x XTALI, XTALI = 12.288 MHz
@@ -170,24 +179,6 @@ bool VS1053Component::init_() {
   // Set minimum volume
   // TODO or set analog power down?
   this->set_volume(1, 1);
-
-  return true;
-}
-
-bool VS1053Component::soft_reset_() {
-  ESP_LOGI(TAG, "Soft reset");
-
-  // Assert soft reset
-  this->command_write_(SCI_REG_MODE, MODE_SM_SDINEW | MODE_SM_RESET);
-
-  // Datasheet says to wait 2 us, then check DREQ
-  delayMicroseconds(10);
-
-  // Datasheet says DREQ will assert in 1.8 ms @ 12.288 MHz
-  if (!(this->wait_data_ready_(4000))) {
-    ESP_LOGE(TAG, "Soft reset failed. DREQ not asserted.");
-    return false;
-  }
 
   return true;
 }

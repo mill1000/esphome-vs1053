@@ -184,6 +184,16 @@ bool VS1053Component::init_(bool soft_reset) {
   return true;
 }
 
+uint8_t VS1053Component::get_fill_byte_() {
+  return get_parameter_(PARAMETER_END_FILL_BYTE_ADDR) & 0xFF;
+}
+
+uint16_t VS1053Component::get_parameter_(uint16_t addr) {
+  // Read parameter from RAM
+  this->command_write_(SCI_REG_WRAMADDR, addr);
+  return this->command_read_(SCI_REG_WRAM);
+}
+
 void VS1053Component::data_write_(const uint8_t* buffer, size_t length) {
   ESP_LOGV(TAG, "SDI write %d bytes: %s", length, format_hex_pretty(buffer, length).c_str());
 

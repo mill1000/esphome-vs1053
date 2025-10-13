@@ -46,6 +46,8 @@ static constexpr const uint16_t MODE_SM_CLKRANGE = 0x8000;  // Input clock range
 static constexpr const uint16_t EXTRA_PARAMETER_VERSION = 0x0003;
 static constexpr const uint16_t EXTRA_PARAMETER_ADDR = 0x1E02;
 
+static constexpr const uint16_t PARAMETER_END_FILL_BYTE_ADDR = 0x1E06;
+
 typedef struct extra_parameters_t {
   uint16_t version;         // 0x1E02 - Structure version
   uint16_t config1;         // 0x1E03 - PPSs RRRR: PS mode, SBR mode, Reverb

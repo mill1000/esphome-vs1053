@@ -7,11 +7,17 @@
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
-
 #include "vs1053_reg.h"
 
 namespace esphome {
 namespace vs1053 {
+
+static constexpr const uint32_t VS1053_MAX_LOOP_RUNTIME = 8000;  // 8 ms
+
+static constexpr const size_t VS1053_FIFO_LENGTH = 2048;
+static constexpr const size_t VS1053_TRANSFER_SIZE = 32;  // DREQ must be checked at least every 32 bytes
+
+static constexpr const size_t VS1053_FILL_LENGTH = 2052;
 
 static constexpr const uint8_t VS1053_VERSION = 4;  // Per datasheet, VS1053/VS8053 SS_VER = 4
 
@@ -36,16 +42,31 @@ class VS1053Component : public Component {
   void set_volume(uint8_t left, uint8_t right);
   void play_test_sine(uint16_t ms, uint32_t freq_hz = 1000, uint32_t sample_rate_hz = 44100);
   void play_test_sine_sdi(uint16_t ms);
+  void play_file();
 
  protected:
-  GPIOPin* reset_pin_;
-  GPIOPin* dreq_pin_;
-  VS1053_SCI_SPIDevice* sci_spi_;
-  VS1053_SDI_SPIDevice* sdi_spi_;
+  GPIOPin* reset_pin_ = nullptr;
+  GPIOPin* dreq_pin_ = nullptr;
+  VS1053_SCI_SPIDevice* sci_spi_ = nullptr;
+  VS1053_SDI_SPIDevice* sdi_spi_ = nullptr;
+
+  enum class PlaybackState {
+    Idle,
+    Playing,
+    Stop,
+    StopFault,
+  };
+
+  PlaybackState state_ = PlaybackState::Idle;
+  const uint8_t* buffer_ = nullptr;
+  const uint8_t* buffer_end_ = nullptr;
+  uint8_t fill_buffer_[VS1053_TRANSFER_SIZE];
+  size_t fill_remaining_ = 0;
 
   bool init_(bool soft_reset = false);
 
   bool wait_data_ready_(uint32_t timeout_us);
+  bool data_ready_() { return this->dreq_pin_->digital_read(); }
 
   void data_write_(const uint8_t* buffer, size_t length);
   uint16_t command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data);

@@ -2,6 +2,7 @@
 
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
+#include "test_tones_mp3.h"
 #include "vs1053_reg.h"
 
 namespace esphome {
@@ -67,6 +68,40 @@ void VS1053Component::set_volume(uint8_t left, uint8_t right) {
   // Maximum volume 0x0000, minimum 0xFEFE, analog powerdown 0xFFFF
   uint16_t vol = convert(left) << 8 | convert(right);
   this->command_write_(SCI_REG_VOLUME, vol);
+}
+
+void VS1053Component::play_file_test() {
+  const uint8_t* buffer = test_tone_mp3;
+
+  // Wait for data ready
+  ESP_LOGI(TAG, "Waiting for data ready");
+  this->wait_data_ready_(1000);
+
+  // TODO play back start
+  // Get file, setup pointers and length
+  // Write as much data to buffer as possible
+  // return
+  //
+  // in loop
+  // Check if still playing
+  //  Fill buffer as much as possible? (up to a time limit?)
+  // Check if done
+  //  Get & send fill bytes
+  // TODO How long does ending X bytes take?
+
+  const uint8_t* end = test_tone_mp3 + sizeof(test_tone_mp3);
+  uint32_t count = 0;
+  while (buffer != end) {
+    if (!this->data_ready_();) {
+      ESP_LOGD(TAG, "No DREQ");
+      continue;
+    }
+
+    // ESP_LOGI(TAG, "Sending data %d", count);
+    this->data_write_(buffer, 32);
+    buffer += 32;
+    count += 32;
+  }
 }
 
 void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sample_rate_hz) {
@@ -195,7 +230,7 @@ uint16_t VS1053Component::get_parameter_(uint16_t addr) {
 }
 
 void VS1053Component::data_write_(const uint8_t* buffer, size_t length) {
-  ESP_LOGV(TAG, "SDI write %d bytes: %s", length, format_hex_pretty(buffer, length).c_str());
+  // ESP_LOGV(TAG, "SDI write %d bytes: %s", length, format_hex_pretty(buffer, length).c_str());
 
   this->sdi_spi_->enable();
   this->sdi_spi_->write_array(buffer, length);

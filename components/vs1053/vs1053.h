@@ -12,12 +12,14 @@
 namespace esphome {
 namespace vs1053 {
 
-static constexpr const uint32_t VS1053_MAX_LOOP_RUNTIME = 8000;  // 8 ms
+static constexpr const uint32_t VS1053_CANCEL_TIMEOUT_US = 1000000;  // 1 sec
+static constexpr const uint32_t VS1053_LOOP_TIMEOUT_US = 8000;       // 8 ms
 
 static constexpr const size_t VS1053_FIFO_LENGTH = 2048;
 static constexpr const size_t VS1053_TRANSFER_SIZE = 32;  // DREQ must be checked at least every 32 bytes
 
 static constexpr const size_t VS1053_FILL_LENGTH = 2052;
+static constexpr const size_t VS1053_STOP_FILL_LENGTH = 2048;
 
 static constexpr const uint8_t VS1053_VERSION = 4;  // Per datasheet, VS1053/VS8053 SS_VER = 4
 
@@ -32,7 +34,6 @@ class VS1053Component : public Component {
   void setup() override;
   void loop() override;
   void dump_config() override;
-  // float get_setup_priority() const override { return setup_priority::DATA; }
 
   void set_reset_pin(GPIOPin* pin) { this->reset_pin_ = pin; }
   void set_dreq_pin(GPIOPin* pin) { this->dreq_pin_ = pin; }
@@ -40,9 +41,12 @@ class VS1053Component : public Component {
   void set_sdi_device(VS1053_SDI_SPIDevice* spi) { this->sdi_spi_ = spi; }
 
   void set_volume(uint8_t left, uint8_t right);
+  void cancel_playback();
+  void play_file(const uint8_t* data, size_t length);
+
   void play_test_sine(uint16_t ms, uint32_t freq_hz = 1000, uint32_t sample_rate_hz = 44100);
   void play_test_sine_sdi(uint16_t ms);
-  void play_file();
+  void play_file_test();
 
  protected:
   GPIOPin* reset_pin_ = nullptr;
@@ -53,8 +57,10 @@ class VS1053Component : public Component {
   enum class PlaybackState {
     Idle,
     Playing,
+    Cancel,
+    Cancelled,
     Stop,
-    StopFault,
+    Error,
   };
 
   PlaybackState state_ = PlaybackState::Idle;
@@ -63,9 +69,16 @@ class VS1053Component : public Component {
   uint8_t fill_buffer_[VS1053_TRANSFER_SIZE];
   size_t fill_remaining_ = 0;
 
-  bool init_(bool soft_reset = false);
+  void finish_playback_();
 
-  bool wait_data_ready_(uint32_t timeout_us);
+  bool init_(bool soft_reset = false);
+  bool get_cancel_bit_() const;
+  void set_cancel_bit_();
+  uint8_t get_fill_byte_() const;
+
+  uint16_t get_parameter_(uint16_t addr) const;
+
+  bool wait_data_ready_(uint32_t timeout_us) const;
   bool data_ready_() { return this->dreq_pin_->digital_read(); }
 
   void data_write_(const uint8_t* buffer, size_t length);

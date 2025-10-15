@@ -111,6 +111,7 @@ void VS1053Component::loop() {
 
   // Write as much file data as possible
   size_t remaining = this->buffer_end_ - this->buffer_;
+  ESP_LOGD(TAG, "%d bytes of file data remaining.", remaining);
 
   while (this->data_ready_() && remaining > 0) {
     size_t write_length = std::min(remaining, VS1053_TRANSFER_SIZE);
@@ -130,6 +131,7 @@ void VS1053Component::loop() {
     if (this->state_ == PlaybackState::Cancel) {
       if (!this->get_cancel_bit_()) {
         // Start fill if cancel bit is cleared
+        ESP_LOGI(TAG, "Playback cancelled. Sending fill data.");
         this->fill_remaining_ = VS1053_FILL_LENGTH;
         this->state_ = PlaybackState::Cancelled;
       } else if ((now - this->cancel_start_) > VS1053_CANCEL_TIMEOUT_US) {
@@ -144,6 +146,7 @@ void VS1053Component::loop() {
 
   // End of file, stop playback
   if (this->buffer_ >= this->buffer_end_) {
+    ESP_LOGI(TAG, "Playback complete. Sending fill data.");
     this->fill_remaining_ = VS1053_FILL_LENGTH;
     this->state_ = PlaybackState::Stop;
   }
@@ -176,6 +179,8 @@ void VS1053Component::cancel_playback() {
   if (this->state_ != PlaybackState::Playing)
     return;
 
+  ESP_LOGI(TAG, "Cancelling playback.");
+
   // Set cancel bit
   this->set_cancel_bit_();
 
@@ -192,12 +197,13 @@ void VS1053Component::play_file(const uint8_t* data, size_t length) {
   }
 
   // Wait for data ready
-  ESP_LOGI(TAG, "Waiting for data ready");
+  ESP_LOGI(TAG, "Waiting for data ready.");
   if (!this->wait_data_ready_(1000)) {
     ESP_LOGE(TAG, "Playback failed. Not ready for data.");
     return;
   }
 
+  ESP_LOGI(TAG, "Starting playback.");
   // Save buffer
   this->buffer_ = data;
   this->buffer_end_ = data + length;
@@ -307,6 +313,8 @@ void VS1053Component::play_test_sine_sdi(uint16_t ms) {
 }
 
 void VS1053Component::finish_playback_() {
+  ESP_LOGD(TAG, "Finishing playback.");
+
   // Set cancel bit
   this->set_cancel_bit_();
 
@@ -319,6 +327,7 @@ void VS1053Component::finish_playback_() {
 
     // Cancel bit won't clear, device is in error
     if (fill_sent >= VS1053_STOP_FILL_LENGTH) {
+      ESP_LOGE(TAG, "Playback stop failed.");
       this->state_ = PlaybackState::Error;
       return;
     }

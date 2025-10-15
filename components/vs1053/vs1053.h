@@ -68,23 +68,24 @@ class VS1053Component : public Component {
   const uint8_t* buffer_end_ = nullptr;
   uint8_t fill_buffer_[VS1053_TRANSFER_SIZE];
   size_t fill_remaining_ = 0;
+  uint32_t cancel_start_ = 0;
 
   void finish_playback_();
 
   bool init_(bool soft_reset = false);
   bool get_cancel_bit_() const;
-  void set_cancel_bit_();
+  void set_cancel_bit_() const;
   uint8_t get_fill_byte_() const;
 
   uint16_t get_parameter_(uint16_t addr) const;
 
   bool wait_data_ready_(uint32_t timeout_us) const;
-  bool data_ready_() { return this->dreq_pin_->digital_read(); }
+  bool data_ready_() const { return this->dreq_pin_->digital_read(); }
 
-  void data_write_(const uint8_t* buffer, size_t length);
-  uint16_t command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data);
-  void command_write_(uint8_t addr, uint16_t data) { this->command_transfer_(SCI_CMD_WRITE, addr, data); }
-  uint16_t command_read_(uint8_t addr) { return this->command_transfer_(SCI_CMD_READ, addr, 0); }
+  void data_write_(const uint8_t* buffer, size_t length) const;
+  uint16_t command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data) const;
+  void command_write_(uint8_t addr, uint16_t data) const { this->command_transfer_(SCI_CMD_WRITE, addr, data); }
+  uint16_t command_read_(uint8_t addr) const { return this->command_transfer_(SCI_CMD_READ, addr, 0); }
 };
 
 }  // namespace vs1053

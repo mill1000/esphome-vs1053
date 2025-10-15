@@ -217,23 +217,23 @@ void VS1053Component::play_file(const uint8_t* data, size_t length) {
 
   // File should be playing now, get fill byte and populate fill buffer
   uint8_t fill_byte = this->get_fill_byte_();
-  ESP_LOGD(TAG, "End of stream fill byte 0x%02X");
+  ESP_LOGD(TAG, "End of stream fill byte 0x%02X", fill_byte);
 
   memset(this->fill_buffer_, fill_byte, sizeof(this->fill_buffer_));
   this->fill_remaining_ = 0;
 }
 
 void VS1053Component::play_file_test() {
-  const uint8_t* buffer = test_tone_mp3;
+  const uint8_t* buffer = test_tone_mp32;
+  const uint8_t* end = buffer + sizeof(test_tone_mp32);
 
   // Wait for data ready
   ESP_LOGI(TAG, "Waiting for data ready");
   this->wait_data_ready_(1000);
 
-  const uint8_t* end = test_tone_mp3 + sizeof(test_tone_mp3);
   uint32_t count = 0;
   while (buffer != end) {
-    if (!this->data_ready_();) {
+    if (!this->data_ready_()) {
       ESP_LOGD(TAG, "No DREQ");
       continue;
     }
@@ -369,27 +369,27 @@ bool VS1053Component::init_(bool soft_reset) {
   return true;
 }
 
-bool VS1053Component::get_cancel_bit_() {
-  return this->command_read_(SCI_REG_MODE) & MODE_SM_CANCEL
+bool VS1053Component::get_cancel_bit_() const {
+  return this->command_read_(SCI_REG_MODE) & MODE_SM_CANCEL;
 }
 
-void VS1053Component::set_cancel_bit_() {
+void VS1053Component::set_cancel_bit_() const {
   // Set cancel bit
   uint16_t mode = this->command_read_(SCI_REG_MODE);
   this->command_write_(SCI_REG_MODE, mode | MODE_SM_CANCEL);
 }
 
-uint8_t VS1053Component::get_fill_byte_() {
+uint8_t VS1053Component::get_fill_byte_() const {
   return get_parameter_(PARAMETER_END_FILL_BYTE_ADDR) & 0xFF;
 }
 
-uint16_t VS1053Component::get_parameter_(uint16_t addr) {
+uint16_t VS1053Component::get_parameter_(uint16_t addr) const {
   // Read parameter from RAM
   this->command_write_(SCI_REG_WRAMADDR, addr);
   return this->command_read_(SCI_REG_WRAM);
 }
 
-bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {
+bool VS1053Component::wait_data_ready_(uint32_t timeout_us) const {
   ESP_LOGD(TAG, "Waiting %d us for DREQ...", timeout_us);
 
   uint32_t start = micros();
@@ -403,7 +403,7 @@ bool VS1053Component::wait_data_ready_(uint32_t timeout_us) {
   return true;
 }
 
-void VS1053Component::data_write_(const uint8_t* buffer, size_t length) {
+void VS1053Component::data_write_(const uint8_t* buffer, size_t length) const {
   // ESP_LOGV(TAG, "SDI write %d bytes: %s", length, format_hex_pretty(buffer, length).c_str());
 
   this->sdi_spi_->enable();
@@ -411,7 +411,7 @@ void VS1053Component::data_write_(const uint8_t* buffer, size_t length) {
   this->sdi_spi_->disable();
 }
 
-uint16_t VS1053Component::command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data) {
+uint16_t VS1053Component::command_transfer_(uint8_t instruction, uint8_t addr, uint16_t data) const {
   ESP_LOGV(TAG, "SCI transfer %02X %02X %04X", instruction, addr, data);
 
   // Assert XCS

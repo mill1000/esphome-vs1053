@@ -63,6 +63,9 @@ class VS1053Component : public Component {
     Error,
   };
 
+  uint8_t volume_left_ = 200;
+  uint8_t volume_right_ = 200;
+
   PlaybackState state_ = PlaybackState::Idle;
   const uint8_t* buffer_ = nullptr;
   const uint8_t* buffer_end_ = nullptr;

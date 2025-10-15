@@ -163,6 +163,10 @@ void VS1053Component::dump_config() {
 void VS1053Component::set_volume(uint8_t left, uint8_t right) {
   ESP_LOGD(TAG, "Set volume L %d, R %d.", left, right);
 
+  // Save volume
+  this->volume_left_ = left;
+  this->volume_right_ = right;
+
   // Convert incoming volume to attenuation
   auto convert = [](uint8_t v) {
     return 0xFF - v;
@@ -370,10 +374,8 @@ bool VS1053Component::init_(bool soft_reset) {
   ESP_LOGD(TAG, "Configuring clocks.");
   this->command_write_(SCI_REG_CLOCKF, 0x6000);
 
-  // Set minimum volume
-  // TODO or set analog power down?
-  // TODO keep volume in var and restore on init?
-  this->set_volume(200, 200);
+  // Set volume
+  this->set_volume(this->volume_left_, this->volume_right_);
 
   return true;
 }

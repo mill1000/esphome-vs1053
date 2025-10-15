@@ -2,7 +2,6 @@
 
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
-#include "test_tones_mp3.h"
 #include "vs1053_reg.h"
 
 namespace esphome {
@@ -231,28 +230,6 @@ void VS1053Component::play_file(const uint8_t* data, size_t length) {
 
   memset(this->fill_buffer_, fill_byte, sizeof(this->fill_buffer_));
   this->fill_remaining_ = 0;
-}
-
-void VS1053Component::play_file_test() {
-  const uint8_t* buffer = test_tone_mp32;
-  const uint8_t* end = buffer + sizeof(test_tone_mp32);
-
-  // Wait for data ready
-  ESP_LOGI(TAG, "Waiting for data ready");
-  this->wait_data_ready_(1000);
-
-  uint32_t count = 0;
-  while (buffer != end) {
-    if (!this->data_ready_()) {
-      ESP_LOGD(TAG, "No DREQ");
-      continue;
-    }
-
-    // ESP_LOGI(TAG, "Sending data %d", count);
-    this->data_write_(buffer, 32);
-    buffer += 32;
-    count += 32;
-  }
 }
 
 void VS1053Component::play_test_sine(uint16_t ms, uint32_t freq_hz, uint32_t sample_rate_hz) {

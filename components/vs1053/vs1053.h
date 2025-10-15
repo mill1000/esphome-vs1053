@@ -46,7 +46,6 @@ class VS1053Component : public Component {
 
   void play_test_sine(uint16_t ms, uint32_t freq_hz = 1000, uint32_t sample_rate_hz = 44100);
   void play_test_sine_sdi(uint16_t ms);
-  void play_file_test();
 
  protected:
   GPIOPin* reset_pin_ = nullptr;

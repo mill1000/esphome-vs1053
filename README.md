@@ -9,17 +9,25 @@ An minimal ESPHome component for the VS1053 Audio Codec.
 
 
 ## Configuration
-
+Below is a configuration snippet for the Adafruit ESP32 V2 Feather and Adafruit Music Maker FeatherWing.
 ```yaml
 external_components:
-  - source: github://mill1000/esphome-vs1053@main
-    components: [vs1053]
+  - source:
+      type: local
+      path: /vs1053/components
+    components: [ vs1053 ]
+
+spi:
+  clk_pin: GPIO5
+  mosi_pin: GPIO19
+  miso_pin: GPIO21
 
 vs1053:
-  dreq_pin: GPIOX
-  reset_pin: GPIOX # Optional HW reset
-  sdi_spi:
-    cs_pin: GPIOX
+  id: player
+  # reset_pin: GPIO22 # Optional
+  dreq_pin: GPIO15
   sci_spi:
-    cs_pin: GPIOX
+    cs_pin: GPIO32
+  sdi_spi:
+    cs_pin: GPIO33
 ```
